@@ -2,17 +2,21 @@ import React,{useEffect, useState} from 'react'
 import axios from 'axios'
 
 const ToManyCountries = () => <p>Too many matches, specify another filter</p>
-const Countries = ({shown}) => shown.map(({name}) => <p>{name}</p>)
-const SingleCountry = ({country}) => {
-  return(
-    <>
-    <h2>{country.name}</h2>
-    <h3>languages</h3>
-    <p><ul>{country.languages.map(({name}) => <li>{name}</li>)}</ul></p>
-    <img src={country.flag} width='100px' height='100px'/>
-    </>
 
-)
+const Countries = ({shown, handleChangeFilter}) =>
+shown.map(({name},i) =>
+<p key={i}>{name}<button onClick={() => handleChangeFilter(name)}>show</button></p>)
+
+  const SingleCountry = ({country}) => {
+    return(
+      <>
+      <h2>{country.name}</h2>
+      <h3>languages</h3>
+      <ul>{country.languages.map(({name},i) => <li key={i}>{name}</li>)}</ul>
+      <img src={country.flag} width='100px' height='100px'/>
+      </>
+
+  )
 }
 const App = () => {
   const [countries, setCountries] = useState([])
@@ -26,12 +30,15 @@ const App = () => {
     .then(response => { console.log(response.data);setCountries(response.data)})
   }, [])
   const triggerShow = (value, collection) =>{
-    let toShow = collection.concat().filter(({name}) => name.toLowerCase().includes(value))
+    console.log(value, collection)
+    let toShow = collection.concat().filter(({name}) => name.includes(value))
+    console.log(toShow)
     setShown(toShow)
   }
   const handleChangeFilter = (event) => {
-    triggerShow(event.target.value, countries)
-    setToFilter(event.target.value)
+    const data = !event.target ? event : event.target.value
+    triggerShow(data, countries)
+    setToFilter(data)
   }
   return (
     <div>
@@ -39,7 +46,7 @@ const App = () => {
       {shown.length < 10 && shown.length >= 1
         ? (shown.length === 1
           ? <SingleCountry country={shown[0]}></SingleCountry>
-          : <Countries shown={shown}></Countries>
+          : <Countries shown={shown} handleChangeFilter={handleChangeFilter}></Countries>
       )
       : <ToManyCountries></ToManyCountries>
   }
