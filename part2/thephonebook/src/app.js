@@ -7,16 +7,16 @@ const Filter = ({toFilter, handleChangeFilter}) => (
 </div>
 )
 
-const PersonForm = (props) => (
-  <form onSubmit={props.handleSubmit}>
+const PersonForm = ({handleSubmit, newName, handleChangeName, newNumber, handleChangeNumber}) => (
+  <form onSubmit={handleSubmit}>
     <div>
-      name: <input  value={props.newName} onChange={props.handleChangeName} />
+      name: <input  value={newName} onChange={handleChangeName} />
   </div>
   <div>
-    number: <input  value={props.newNumber} onChange={props.handleChangeNumber} />
+    number: <input  value={newNumber} onChange={handleChangeNumber} />
 </div>
 <div>
-  <button type="submit" >add</button>
+  <button disabled={!newName.length || !newNumber.length}type="submit" >add</button>
 </div>
 </form>
 )
@@ -44,13 +44,13 @@ const Persons = ({shown, handleDelete}) =>
     const [ newName, setNewName ] = useState('')
     const [ newNumber, setNumber ] = useState('')
 
-    useEffect(() => {
-      personServices.getAll()
+    const getAll = () => {personServices.getAll()
       .then(persons => {
         setPersons(persons)
         setShown(persons)
       })
-    }, [])
+    }
+    useEffect(() => { getAll() }, [])
 
     const triggerShow = (value, collection) =>{
       let toShow = collection.concat().filter(({name}) => name.toLowerCase().includes(value))
@@ -69,40 +69,51 @@ const Persons = ({shown, handleDelete}) =>
 
     const handleSubmit = (event) => {
       event.preventDefault()
-      const updates = () =>{
-        const newTab = persons.concat({name:newName, number:newNumber})
-        setPersons(newTab)
-        triggerShow(toFilter,newTab)
+      let newObject = {name:newName, number:newNumber};
+      let exist = persons.some((element) => element.name === newName) === true
+      if(exist && window.confirm(`${newName} is already added to phonebook, replace the older number
+        with a new one?`)){
+          let id = persons.filter((element) => element.name === newName)[0].id
+          personServices.update(id, newObject)
+          .then(response => {getAll()})
+          .catch(error => {
+            console.log('fail')
+          })
+        }
+        else{
+          personServices.create(newObject)
+          .then(response => {getAll()})
+          .catch(error => {
+            console.log('fail')
+          })
+        }
       }
-      persons.some((element) => element.name === newName) === true
-      ? alert(`${newName} is already added to phonebook`)
-      : updates()
+
+      const handleDelete = (id) => {
+        personServices.remove(id)
+        .then(response => {getAll()})
+        .catch(error => {
+          console.log('fail')
+        })
+      }
+
+      return (
+        <div>
+          <h2>Phonebook</h2>
+          <Filter toFilter={toFilter} handleChangeFilter={handleChangeFilter}></Filter>
+          <h2>add a new</h2>
+          <PersonForm
+            handleSubmit={handleSubmit}
+            newName={newName}
+            handleChangeName={handleChangeName}
+            newNumber={newNumber}
+            handleChangeNumber={handleChangeNumber}
+            ></PersonForm>
+
+          <h2>Numbers</h2>
+          <Persons shown={shown} handleDelete={handleDelete}></Persons>
+        </div>
+      )
     }
 
-    const handleDelete = (id) => {
-      personServices.remove(id)
-      .catch(error => {
-        console.log('fail')
-      })
-    }
-
-    return (
-      <div>
-        <h2>Phonebook</h2>
-        <Filter toFilter={toFilter} handleChangeFilter={handleChangeFilter}></Filter>
-        <h2>add a new</h2>
-        <PersonForm
-          handleSubmit={handleSubmit}
-          newName={newName}
-          handleChangeName={handleChangeName}
-          newNumber={newNumber}
-          handleChangeNumber={handleChangeNumber}
-          ></PersonForm>
-
-        <h2>Numbers</h2>
-        <Persons shown={shown} handleDelete={handleDelete}></Persons>
-      </div>
-    )
-  }
-
-  export default App
+    export default App
