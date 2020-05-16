@@ -30,11 +30,9 @@ const App = () => {
   const [ newNumber, setNumber ] = useState('')
 
   useEffect(() => {
-    console.log('effect')
     axios
       .get('http://localhost:3001/persons')
       .then(response => {
-        console.log('promise fulfilled')
         setPersons(response.data)
         setShown(response.data)
       })
