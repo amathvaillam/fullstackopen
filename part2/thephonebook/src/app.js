@@ -48,6 +48,13 @@ shown.map(({name, number, id}) => {
       window.setTimeout(() => {setMessage(null)},2000)
     }
 
+    const fail = (name) => {
+      let message = `Information of ${name} has already been removed from server`
+      setClassname('fail')
+      setMessage(message)
+      window.setTimeout(() => {setMessage(null)},2000)
+    }
+
     const getAll = () => {
       personServices.getAll()
       .then(persons => {
@@ -85,7 +92,8 @@ shown.map(({name, number, id}) => {
             getAll()
           })
           .catch(error => {
-            console.log('fail')
+            fail(newName)
+            getAll()
           })
         }
         else{
@@ -104,7 +112,7 @@ shown.map(({name, number, id}) => {
         personServices.remove(id)
         .then(response => {getAll()})
         .catch(error => {
-          console.log('fail')
+          success()
         })
       }
 
